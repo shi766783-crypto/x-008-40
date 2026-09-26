@@ -23,6 +23,10 @@
           <option v-for="c in EXPENSE_CATEGORIES" :key="c" :value="c">{{ c }}</option>
         </optgroup>
       </select>
+      <select v-model="filters.accountId" class="filter-select">
+        <option value="">全部账户</option>
+        <option v-for="a in store.accounts" :key="a.id" :value="a.id">{{ a.name }}</option>
+      </select>
       <label class="check">
         <input type="checkbox" v-model="filters.largeOnly" />
         仅看大额
@@ -126,7 +130,7 @@ const TYPE_LABELS = { income: '收入', expense: '支出', transfer: '转账' }
 const modalOpen = ref(false)
 const editing = ref(null)
 const form = reactive(txApi.emptyTransactionForm())
-const filters = reactive({ keyword: '', type: '', category: '', largeOnly: false })
+const filters = reactive({ keyword: '', type: '', category: '', accountId: '', largeOnly: false })
 
 const switchType = (type) => {
   form.type = type
@@ -141,6 +145,13 @@ const visibleTransactions = computed(() => {
   let list = [...store.transactions]
   if (filters.type) list = list.filter((t) => t.type === filters.type)
   if (filters.category) list = list.filter((t) => t.category === filters.category)
+  if (filters.accountId) {
+    list = list.filter((t) =>
+      t.type === 'transfer'
+        ? t.fromAccountId === filters.accountId || t.toAccountId === filters.accountId
+        : t.accountId === filters.accountId
+    )
+  }
   if (filters.largeOnly) list = list.filter((t) => t.isLarge)
   if (filters.keyword) {
     const k = filters.keyword.trim().toLowerCase()
